@@ -1,0 +1,38 @@
+# Data and archives
+TrainingData/
+*.tar
+*.zip
+archive.zip
+BraTS2021_*/
+
+# Checkpoints and large artifacts
+checkpoints/
+*.pth
+model.pt
+
+# Logs and job output
+logs/
+*.out
+*.err
+*.log
+loss.txt
+val.txt
+run.log
+run_oom.log
+farmshare_run.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# IDE / local
+.schrodinger/
+.cursor/
+
+# Generated figures (reproducible via plot_training_figures.py)
+*.png
+
+# Optional: full fold JSON from MONAI tutorial (use brats21_80_20.json instead)
+brats21_folds.json
