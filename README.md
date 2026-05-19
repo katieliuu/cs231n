@@ -15,10 +15,6 @@ Swin UNETR training and evaluation for BraTS 2021 brain tumor segmentation on St
 | `curriculum_splits/` | Generated subset JSONs |
 | `run_*.sbatch`, `run_*.sh`, `*.slurm` | Slurm / shell launchers |
 
-## Data
-
-Place BraTS 2021 training NIfTIs under `TrainingData/` (not in git). Set `MONAI_DATA_DIRECTORY` or use default `/scratch/users/linika`.
-
 ## Environment
 
 ```bash
@@ -39,19 +35,4 @@ Curriculum (10% → 25% → 50%): `sbatch run_curriculum_train.sbatch`
 ```bash
 sbatch run_eval.sh
 sbatch run_eval_comprehensive.sh
-```
-
-## Git / GitHub
-
-Branch: `swin_linika` (code only; data and checkpoints are gitignored).
-
-| Remote | Repository |
-|--------|------------|
-| `origin` | `git@github.com:katieliuu/cs231n.git` |
-| `rad260` | `git@github.com:linika1/RAD260-Final-Project.git` |
-
-```bash
-cd /scratch/users/linika
-git push -u origin swin_linika    # cs231n
-git push -u rad260 swin_linika    # RAD260 final project
 ```
