@@ -15,10 +15,6 @@ Swin UNETR training and evaluation for BraTS 2021 brain tumor segmentation on St
 | `curriculum_splits/` | Generated subset JSONs |
 | `run_*.sbatch`, `run_*.sh`, `*.slurm` | Slurm / shell launchers |
 
-## Data
-
-Place BraTS 2021 training NIfTIs under `TrainingData/` (not in git). Set `MONAI_DATA_DIRECTORY` or use default `/scratch/users/linika`.
-
 ## Environment
 
 ```bash
