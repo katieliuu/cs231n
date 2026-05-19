@@ -40,3 +40,16 @@ Curriculum (10% → 25% → 50%): `sbatch run_curriculum_train.sbatch`
 sbatch run_eval.sh
 sbatch run_eval_comprehensive.sh
 ```
+
+## Git / GitHub
+
+Branch: `brats-swin-unetr-farmshare` (code only; data and checkpoints are gitignored).
+
+```bash
+cd /scratch/users/linika
+# Create an empty repo on GitHub, then:
+git remote add origin git@github.com:YOUR_USER/YOUR_REPO.git
+git push -u origin brats-swin-unetr-farmshare
+```
+
+Use a GitHub SSH key or HTTPS with a personal access token if `git@github.com` is denied on FarmShare.
