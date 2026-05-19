@@ -43,13 +43,11 @@ sbatch run_eval_comprehensive.sh
 
 ## Git / GitHub
 
-Branch: `brats-swin-unetr-farmshare` (code only; data and checkpoints are gitignored).
+Branch: `swin_linika` on shared repo `cs231n` (code only; data and checkpoints are gitignored).
 
 ```bash
 cd /scratch/users/linika
-# Create an empty repo on GitHub, then:
-git remote add origin git@github.com:YOUR_USER/YOUR_REPO.git
-git push -u origin brats-swin-unetr-farmshare
+git push -u origin swin_linika
 ```
 
-Use a GitHub SSH key or HTTPS with a personal access token if `git@github.com` is denied on FarmShare.
+Remote: `https://github.stanford.edu/cs231n/cs231n.git`
