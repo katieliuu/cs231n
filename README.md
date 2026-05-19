@@ -40,18 +40,3 @@ Curriculum (10% → 25% → 50%): `sbatch run_curriculum_train.sbatch`
 sbatch run_eval.sh
 sbatch run_eval_comprehensive.sh
 ```
-
-## Git / GitHub
-
-Branch: `swin_linika` (code only; data and checkpoints are gitignored).
-
-| Remote | Repository |
-|--------|------------|
-| `origin` | `git@github.com:katieliuu/cs231n.git` |
-| `rad260` | `git@github.com:linika1/RAD260-Final-Project.git` |
-
-```bash
-cd /scratch/users/linika
-git push -u origin swin_linika    # cs231n
-git push -u rad260 swin_linika    # RAD260 final project
-```
