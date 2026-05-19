@@ -50,4 +50,4 @@ cd /scratch/users/linika
 git push -u origin swin_linika
 ```
 
-Remote: `https://github.stanford.edu/cs231n/cs231n.git`
+Remote: `git@github.com:cs231n/cs231n.git`
