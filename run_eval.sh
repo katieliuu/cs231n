@@ -2,7 +2,7 @@
 #SBATCH --job-name=swin_eval
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=48G
 #SBATCH --time=08:00:00
 #SBATCH --output=/scratch/users/linika/logs/swin_eval_%j.out
