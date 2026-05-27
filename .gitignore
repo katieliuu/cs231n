@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Data and archives
 TrainingData/
 *.tar
@@ -38,11 +38,10 @@ __pycache__/
 # Optional: full fold JSON from MONAI tutorial (use brats21_80_20.json instead)
 brats21_folds.json
 
-# Byte-compiled / optimized / DLL files
-=======
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
->>>>>>> origin/main
+
 *.py[codz]
 *$py.class
 
@@ -92,9 +91,10 @@ coverage.xml
 *.py.cover
 .hypothesis/
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 .pytest_cache/
->>>>>>> origin/main
+
 cover/
 
 # Translations
@@ -103,9 +103,9 @@ cover/
 
 # Django stuff:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 *.log
->>>>>>> origin/main
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -216,14 +216,11 @@ venv.bak/
 # mkdocs documentation
 /site
 
-<<<<<<< HEAD
-=======
 # mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
->>>>>>> origin/main
 # Pyre type checker
 .pyre/
 
@@ -247,15 +244,15 @@ cython_debug/
 .abstra/
 
 # Visual Studio Code
-<<<<<<< HEAD
 #   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #   and can be added to the global gitignore or merged into this file. However, if you prefer,
-=======
 #   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #   and can be added to the global gitignore or merged into this file. However, if you prefer, 
->>>>>>> origin/main
+#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
+#   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
+#   and can be added to the global gitignore or merged into this file. However, if you prefer
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 # Temporary file for partial code execution
