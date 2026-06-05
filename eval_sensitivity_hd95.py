@@ -17,13 +17,20 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from monai import data, transforms
-from monai.data import decollate_batch
-from monai.inferers import sliding_window_inference
-from monai.metrics import ConfusionMatrixMetric, HausdorffDistanceMetric
-from monai.networks.nets import SwinUNETR
-from monai.transforms import Activations, AsDiscrete
+from monai.data.dataloader import DataLoader
+from monai.data.dataset import Dataset
+from monai.data.utils import decollate_batch
+from monai.inferers.utils import sliding_window_inference
+from monai.metrics.confusion_matrix import ConfusionMatrixMetric
+from monai.metrics.hausdorff_distance import HausdorffDistanceMetric
+from monai.networks.nets.swin_unetr import SwinUNETR
+from monai.transforms.compose import Compose
+from monai.transforms.utility.dictionary import ConvertToMultiChannelBasedOnBratsClassesd
+from monai.transforms.io.dictionary import LoadImaged
+from monai.transforms.intensity.dictionary import NormalizeIntensityd
+from monai.transforms.post.array import Activations, AsDiscrete
 from monai.utils.enums import MetricReduction
+from typing import cast
 
 
 def _scipy_ok() -> bool:
@@ -77,7 +84,11 @@ def _voxel_spacing_from_meta(image_tensor) -> tuple[float, float, float]:
     if hasattr(aff, "detach"):
         aff = aff.detach().cpu().numpy()
     aff = np.asarray(aff, dtype=np.float64)
-    return tuple(float(np.linalg.norm(aff[:3, i])) for i in range(3))
+    # unpack explicitly so Pylance infers tuple[float, float, float] not tuple[float, ...]
+    d = float(np.linalg.norm(aff[:3, 0]))
+    h = float(np.linalg.norm(aff[:3, 1]))
+    w = float(np.linalg.norm(aff[:3, 2]))
+    return (d, h, w)
 
 
 def _parse_epochs_arg(s: str) -> list[int] | None:
@@ -89,7 +100,11 @@ def _parse_epochs_arg(s: str) -> list[int] | None:
 
 def _checkpoint_paths(ckpt_dir: Path, epochs: list[int] | None) -> list[tuple[int, Path]]:
     if epochs is None:
-        paths = sorted(ckpt_dir.glob("model_epoch_*.pth"), key=lambda p: int(re.search(r"(\d+)", p.stem).group(1)))
+        # re.search may return None; use walrus operator with fallback
+        paths = sorted(
+            ckpt_dir.glob("model_epoch_*.pth"),
+            key=lambda p: int(m.group(1)) if (m := re.search(r"(\d+)", p.stem)) else 0,
+        )
         out = []
         for p in paths:
             m = re.search(r"model_epoch_(\d+)", p.name)
@@ -110,16 +125,17 @@ def evaluate_checkpoint(
     overlap: float,
     max_cases: int | None,
 ) -> dict[str, float]:
-    val_transform = transforms.Compose(
+    # use directly imported names instead of transforms.Compose / data.Dataset etc.
+    val_transform = Compose(
         [
-            transforms.LoadImaged(keys=["image", "label"]),
-            transforms.ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
-            transforms.NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
+            LoadImaged(keys=["image", "label"]),
+            ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
+            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
         ]
     )
     files = val_files if max_cases is None else val_files[: max(0, max_cases)]
-    val_ds = data.Dataset(data=files, transform=val_transform)
-    val_loader = data.DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
+    val_ds = Dataset(data=files, transform=val_transform)
+    val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
 
     model = SwinUNETR(
         in_channels=4,
@@ -170,13 +186,18 @@ def evaluate_checkpoint(
         image = batch["image"].to(device)
         label = batch["label"].to(device)
         logits = inferer(image)
-        preds = decollate_batch(logits)
-        labs = decollate_batch(label)
-        pred_bin = [post_pred(post_sigmoid(p)) for p in preds]
+        preds = cast(list[torch.Tensor], decollate_batch(logits))
+        labs  = cast(list[torch.Tensor], decollate_batch(label))
+        # ensure pred_bin contains Tensors (not NdarrayOrTensor) to satisfy TensorOrList
+        pred_bin: list[torch.Tensor] = [
+            torch.as_tensor(post_pred(post_sigmoid(p)))
+            for p in preds
+        ]
+        labs_tensor: list[torch.Tensor] = [torch.as_tensor(lb) for lb in labs]
         spacing = _voxel_spacing_from_meta(batch["image"])
 
         sens_metric.reset()
-        sens_metric(y_pred=pred_bin, y=labs)
+        sens_metric(y_pred=pred_bin, y=labs_tensor)
         sens_agg = sens_metric.aggregate()
         if isinstance(sens_agg, list):
             s, _ = sens_agg[0]
@@ -190,7 +211,7 @@ def evaluate_checkpoint(
 
         if hd_metric is not None:
             hd_metric.reset()
-            hd_metric(y_pred=pred_bin, y=labs, spacing=spacing)
+            hd_metric(y_pred=pred_bin, y=labs_tensor, spacing=list(spacing))
             hd_agg = hd_metric.aggregate()
             if isinstance(hd_agg, tuple):
                 h, _ = hd_agg
@@ -260,18 +281,18 @@ def main() -> None:
             flush=True,
         )
 
-    rows = []
+    rows: list[dict[str, float | int | str]] = []
     for ep, ckpt in pairs:
         print(f"=== Epoch {ep}: {ckpt.name} (device={device}) ===", flush=True)
-        stats = evaluate_checkpoint(
+        stats: dict[str, float | int | str] = dict(evaluate_checkpoint(
             ckpt,
             val_files,
             device=device,
-            roi_size=roi,
+            roi_size=roi,  # type: ignore[arg-type]
             sw_batch_size=args.sw_batch_size,
             overlap=args.overlap,
             max_cases=args.max_cases,
-        )
+        ))
         stats["epoch"] = ep
         stats["checkpoint"] = str(ckpt)
         rows.append(stats)
@@ -312,8 +333,9 @@ def main() -> None:
             w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             if write_header:
                 w.writeheader()
+            # default to float("nan") not "" so the dict stays numeric-compatible
             for r in rows:
-                w.writerow({k: r.get(k, "") for k in fieldnames})
+                w.writerow({k: r.get(k, float("nan")) for k in fieldnames})
         print(f"Wrote CSV: {out_csv}")
 
 

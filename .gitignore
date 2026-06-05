@@ -271,3 +271,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# data
+TrainingData/
+local_results/
