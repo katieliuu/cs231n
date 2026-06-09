@@ -8,6 +8,7 @@ import shutil
 import time
 import tempfile
 from pathlib import Path
+import threading
 
 import torch
 import subprocess
@@ -37,9 +38,30 @@ with tempfile.TemporaryDirectory() as tmp_in:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # ── time the full predict call ────────────────────────────────────────────
-    if torch.cuda.is_available():
-        torch.cuda.reset_peak_memory_stats()
-        torch.cuda.synchronize()
+    peak_mb = [0]
+    running = True
+
+    def monitor_gpu():
+        while running:
+            try:
+                out = subprocess.check_output(
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=memory.used",
+                        "--format=csv,noheader,nounits",
+                    ]
+                )
+
+                mem = int(out.decode().strip().split("\n")[0])
+                peak_mb[0] = max(peak_mb[0], mem)
+
+            except Exception:
+                pass
+
+            time.sleep(0.5)
+
+    monitor_thread = threading.Thread(target=monitor_gpu)
+    monitor_thread.start()
 
     t0 = time.perf_counter()
     subprocess.run(
@@ -56,15 +78,9 @@ with tempfile.TemporaryDirectory() as tmp_in:
         check=True,
     )
 
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
+    running = False
+    monitor_thread.join()
     total_s = time.perf_counter() - t0
-
-    peak_mb = (
-        torch.cuda.max_memory_allocated() / (1024 ** 2)
-        if torch.cuda.is_available()
-        else float("nan")
-    )
 
 per_volume_s = total_s / N_CASES
 
@@ -73,4 +89,4 @@ print(f"  GPU:                  {torch.cuda.get_device_name(0) if torch.cuda.is_
 print(f"  Cases timed:          {N_CASES}")
 print(f"  Total time:           {total_s:.1f} s")
 print(f"  Time per volume:      {per_volume_s:.2f} s")
-print(f"  Peak GPU memory:      {peak_mb:.0f} MB")
+print(f"  Peak GPU memory:      {peak_mb[0]:.0f} MB")
